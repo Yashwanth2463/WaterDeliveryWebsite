@@ -1,0 +1,109 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f0f8ff;
+  color: #333;
+  margin: 20px;
+}
+
+h1 {
+  text-align: center;
+  color: #1e90ff;
+}
+
+#orderForm {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 500px;
+  margin: 0 auto 20px auto;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+#orderForm input, #orderForm select {
+  padding: 10px;
+  margin: 5px;
+  width: 150px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+#orderForm button {
+  padding: 10px 20px;
+  margin: 5px;
+  border: none;
+  border-radius: 5px;
+  background-color: #1e90ff;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+#orderForm button:hover {
+  background-color: #104e8b;
+}
+
+#status {
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+#dashboard {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+#dashboard p {
+  font-size: 16px;
+  margin: 5px;
+}
+
+#dashboard button {
+  padding: 10px 20px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #ff4500;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+#dashboard button:hover {
+  background-color: #b22222;
+}
+
+#orderHistorySection {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+#orderHistory {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+#orderHistory th, #orderHistory td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: center;
+}
+
+#orderHistory th {
+  background-color: #1e90ff;
+  color: white;
+}
+
+#orderHistory tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+#filterCustomer {
+  padding: 8px;
+  width: 200px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Water Can Delivery</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Smart Water Can Delivery System</h1>
+
+  <div id="orderForm">
+    <input type="text" id="customerName" placeholder="Customer Name">
+    <input type="number" id="orderQuantity" value="1" min="1">
+    <select id="paymentType">
+      <option value="Cash">Cash</option>
+      <option value="UPI">UPI</option>
+      <option value="Card">Card</option>
+    </select>
+    <button onclick="placeOrder()">Place Order</button>
+    <button onclick="showInventory()">Check Inventory</button>
+  </div>
+
+  <p id="status"></p>
+
+  <div id="dashboard">
+    <p id="totalOrders">Total Orders: 0</p>
+    <p id="totalRevenue">Total Revenue: ₹0</p>
+    <p id="cansLeft">Cans Remaining: 50</p>
+    <button onclick="resetInventory()">Reset Inventory & Orders</button>
+  </div>
+
+  <div id="orderHistorySection">
+    <input type="text" id="filterCustomer" placeholder="Filter by customer" onkeyup="filterOrders()">
+    <table id="orderHistory" border="1">
+      <thead>
+        <tr>
+          <th>Customer</th>
+          <th>Quantity</th>
+          <th>Payment</th>
+          <th>Price</th>
+          <th>Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Orders will appear here -->
+      </tbody>
+    </table>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
