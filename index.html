@@ -1,109 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Smart Water Delivery</title>
-<style>
-  body{font-family:sans-serif;}
-  table{border-collapse:collapse;width:100%;margin-top:10px;}
-  th,td{border:1px solid #000;padding:5px;text-align:center;}
-  input, select, button{margin:3px;}
-</style>
+    <meta charset="UTF-8">
+    <title>Water Delivery System</title>
+    <style>
+        /* Simple styles for tables and buttons */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        button { margin: 5px; padding: 5px 10px; }
+    </style>
 </head>
 <body>
+    <h1>Water Delivery System</h1>
 
-<!-- LOGIN -->
-<div id="loginForm">
-  <h2>Driver Login</h2>
-  <select id="roleSelect">
-    <option value="">Select Driver</option>
-    <option value="admin">Admin</option>
-    <option value="auto1">Auto 1</option>
-    <option value="auto2">Auto 2</option>
-    <option value="auto3">Auto 3</option>
-    <option value="auto4">Auto 4</option>
-  </select>
-  <input type="password" id="driverPassword" placeholder="Password">
-  <button onclick="loginDriver(event)">Login</button>
-</div>
+    <!-- Login -->
+    <div id="loginDiv">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="login()">Login</button>
+    </div>
+    <label for="summaryDate">Select Date:</label>
+<input type="date" id="summaryDate">
+<button onclick="renderSummaryByDate()">View Summary</button>
 
-<!-- DASHBOARD -->
-<div id="dashboard" style="display:none;">
-  <button onclick="logoutDriver()">Logout</button>
-  <h2>Dashboard - <span id="currentDriverName"></span></h2>
-  
-!-- DAILY SUMMARY -->
-<h3>Daily Summary</h3>
-<div id="dailySummary">
-  <p>Total Cans Delivered Today: <span id="summaryCans">0</span></p>
-  <p>Total Cash Collected Today: ₹<span id="summaryCash">0</span></p>
-  <p>Total UPI Collected Today: ₹<span id="summaryUPI">0</span></p>
-  <p>Pending Orders: <span id="summaryPending">0</span></p>
-</div>
+    <!-- Dashboard -->
+    <div id="dashboard" style="display:none;">
+        <h2>Admin Dashboard</h2>
 
-  <!-- PLACE ORDER -->
-  <h3>Place Order</h3>
-  <form id="orderForm" onsubmit="placeOrder(event)">
-    <input type="text" id="orderCustomer" placeholder="Customer Name" required>
-    <input type="number" id="orderCans" placeholder="No. of Cans" required>
-    <select id="orderPaymentType">
-      <option value="Cash">Cash</option>
-      <option value="UPI">UPI</option>
-    </select>
-    <button type="submit">Place Order</button>
-  </form>
+        <!-- Daily Summary -->
+        <div id="summaryDiv"></div>
 
-  <button onclick="exportOrdersCSV()">Export Orders CSV</button>
+        <!-- Admin Summary -->
+        <div id="adminSummaryDiv"></div>
+        <button onclick="renderAdminSummary()">View Admin Summary</button>
 
-  <!-- FILTER BY DATE -->
-  <h3>Filter Orders/Trips by Date</h3>
-  <input type="date" id="filterDate">
-  <button onclick="filterByDate()">Filter</button>
+        <!-- Customer Summary -->
+        <div id="customerSummaryDiv"></div>
+        <button onclick="renderCustomerSummary()">View Customer Summary</button>
 
-  <!-- ORDERS TABLE -->
-  <h3>Orders History</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Customer</th><th>Cans</th><th>Amount</th><th>Payment Type</th><th>Date</th><th>Delivered</th>
-      </tr>
-    </thead>
-    <tbody id="ordersTableBody"></tbody>
-  </table>
+        <!-- Orders & Trip History -->
+        <div>
+            <button onclick="renderOrders()">View Order History</button>
+            <button onclick="renderTrips()">View Trip History</button>
+        </div>
+    </div>
 
-  <!-- TRIP LOG -->
-  <h3>Log Trip</h3>
-  <form id="tripForm" onsubmit="logTrip(event)">
-    Trip Number: <input type="number" id="tripNumber" required>
-    Collected Empties: <input type="number" id="tripCollected" required>
-    <div id="customerDeliveries"></div>
-    <button type="button" onclick="addDeliveryRow()">Add Delivery Row</button>
-    <button type="submit">Log Trip</button>
-  </form>
-
-  <!-- TRIP HISTORY -->
-  <h3>Trip History</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Driver</th><th>Trip#</th><th>Total Cans</th><th>Empties Collected</th><th>Total Amount</th><th>Deliveries</th><th>Time</th>
-      </tr>
-    </thead>
-    <tbody id="tripHistoryBody"></tbody>
-  </table>
-
-  <!-- DRIVER MANAGEMENT (Admin Only) -->
-  <div id="driverManagementDiv">
-    <h3>Driver Management</h3>
+    <!-- Tables -->
+    <h3>Order History</h3>
     <table>
-      <thead>
-        <tr><th>Driver</th><th>Password</th><th>Actions</th></tr>
-      </thead>
-      <tbody id="driverManagementBody"></tbody>
+        <thead>
+            <tr>
+                <th>Customer</th>
+                <th>Cans</th>
+                <th>Amount</th>
+                <th>Payment Type</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody id="orderHistoryBody"></tbody>
     </table>
-  </div>
-</div>
 
-<script src="script.js"></script>
+    <h3>Trip History</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Driver</th>
+                <th>Trip #</th>
+                <th>Full Cans</th>
+                <th>Empty Cans</th>
+                <th>Amount</th>
+                <th>Customer Deliveries</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody id="tripHistoryBody"></tbody>
+    </table>
+
+    <script src="script.js"></script>
 </body>
 </html>
