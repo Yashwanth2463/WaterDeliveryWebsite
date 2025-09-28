@@ -1,44 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Water Delivery</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>Smart Water Delivery</title>
+<style>
+  body{font-family:sans-serif;}
+  table{border-collapse:collapse;width:100%;margin-top:10px;}
+  th,td{border:1px solid #000;padding:5px;text-align:center;}
+  input, select, button{margin:3px;}
+</style>
 </head>
 <body>
-  <h1>Smart Water Delivery System</h1>
 
-  <div class="order-form">
-    <label for="customerName">Customer Name:</label>
-    <input type="text" id="customerName" placeholder="Enter your name">
+<!-- LOGIN -->
+<div id="loginForm">
+  <h2>Driver Login</h2>
+  <select id="roleSelect">
+    <option value="">Select Driver</option>
+    <option value="admin">Admin</option>
+    <option value="auto1">Auto 1</option>
+    <option value="auto2">Auto 2</option>
+    <option value="auto3">Auto 3</option>
+    <option value="auto4">Auto 4</option>
+  </select>
+  <input type="password" id="driverPassword" placeholder="Password">
+  <button onclick="loginDriver(event)">Login</button>
+</div>
 
-    <label for="orderQuantity">Number of Cans:</label>
-    <input type="number" id="orderQuantity" value="1" min="1">
+<!-- DASHBOARD -->
+<div id="dashboard" style="display:none;">
+  <button onclick="logoutDriver()">Logout</button>
+  <h2>Dashboard - <span id="currentDriverName"></span></h2>
+  
+!-- DAILY SUMMARY -->
+<h3>Daily Summary</h3>
+<div id="dailySummary">
+  <p>Total Cans Delivered Today: <span id="summaryCans">0</span></p>
+  <p>Total Cash Collected Today: ₹<span id="summaryCash">0</span></p>
+  <p>Total UPI Collected Today: ₹<span id="summaryUPI">0</span></p>
+  <p>Pending Orders: <span id="summaryPending">0</span></p>
+</div>
 
-    <label for="paymentType">Payment Type:</label>
-    <select id="paymentType">
+  <!-- PLACE ORDER -->
+  <h3>Place Order</h3>
+  <form id="orderForm" onsubmit="placeOrder(event)">
+    <input type="text" id="orderCustomer" placeholder="Customer Name" required>
+    <input type="number" id="orderCans" placeholder="No. of Cans" required>
+    <select id="orderPaymentType">
       <option value="Cash">Cash</option>
       <option value="UPI">UPI</option>
     </select>
+    <button type="submit">Place Order</button>
+  </form>
 
-    <button onclick="placeOrder()">Place Order</button>
-    <button onclick="showInventory()">Check Inventory</button>
-  </div>
+  <button onclick="exportOrdersCSV()">Export Orders CSV</button>
 
-  <h2>Order Status</h2>
-  <div id="status">No orders yet.</div>
+  <!-- FILTER BY DATE -->
+  <h3>Filter Orders/Trips by Date</h3>
+  <input type="date" id="filterDate">
+  <button onclick="filterByDate()">Filter</button>
 
-  <h2>Order History</h2>
-  <table id="orderHistory">
-    <tr>
-      <th>Customer</th>
-      <th>Quantity</th>
-      <th>Payment</th>
-      <th>Time</th>
-    </tr>
+  <!-- ORDERS TABLE -->
+  <h3>Orders History</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Customer</th><th>Cans</th><th>Amount</th><th>Payment Type</th><th>Date</th><th>Delivered</th>
+      </tr>
+    </thead>
+    <tbody id="ordersTableBody"></tbody>
   </table>
 
-  <script src="script.js"></script>
+  <!-- TRIP LOG -->
+  <h3>Log Trip</h3>
+  <form id="tripForm" onsubmit="logTrip(event)">
+    Trip Number: <input type="number" id="tripNumber" required>
+    Collected Empties: <input type="number" id="tripCollected" required>
+    <div id="customerDeliveries"></div>
+    <button type="button" onclick="addDeliveryRow()">Add Delivery Row</button>
+    <button type="submit">Log Trip</button>
+  </form>
+
+  <!-- TRIP HISTORY -->
+  <h3>Trip History</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Driver</th><th>Trip#</th><th>Total Cans</th><th>Empties Collected</th><th>Total Amount</th><th>Deliveries</th><th>Time</th>
+      </tr>
+    </thead>
+    <tbody id="tripHistoryBody"></tbody>
+  </table>
+
+  <!-- DRIVER MANAGEMENT (Admin Only) -->
+  <div id="driverManagementDiv">
+    <h3>Driver Management</h3>
+    <table>
+      <thead>
+        <tr><th>Driver</th><th>Password</th><th>Actions</th></tr>
+      </thead>
+      <tbody id="driverManagementBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
