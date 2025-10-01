@@ -1,82 +1,219 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Water Delivery System</title>
-    <style>
-        /* Simple styles for tables and buttons */
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-        button { margin: 5px; padding: 5px 10px; }
-    </style>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Water Delivery</title>
+  <style>
+    body {font-family: Arial, sans-serif; margin:0; padding:0; background:#f4f4f4;}
+    header {background:#0077cc; color:#fff; padding:15px; display:flex; justify-content:space-between; align-items:center;}
+    header h1 {margin:0; font-size:22px;}
+    nav button {background:#fff; border:none; padding:8px 15px; margin-left:10px; border-radius:5px; cursor:pointer; font-weight:bold;}
+    nav button:hover {background:#ddd;}
+    main {padding:20px;}
+    .card {background:#fff; padding:20px; margin:15px 0; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.2);}
+    table {width:100%; border-collapse:collapse; margin-top:10px;}
+    table, th, td {border:1px solid #ccc;}
+    th, td {padding:8px; text-align:center;}
+    #loginPage {display:flex; height:100vh; justify-content:center; align-items:center;}
+    #loginBox {background:#fff; padding:20px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.3);}
+    input {padding:8px; margin:5px 0; width:100%;}
+    button.action {background:#0077cc; color:#fff;}
+  </style>
 </head>
 <body>
-    <h1>Water Delivery System</h1>
 
-    <!-- Login -->
-    <div id="loginDiv">
-        <h2>Login</h2>
-        <input type="text" id="username" placeholder="Username">
-        <input type="password" id="password" placeholder="Password">
-        <button onclick="login()">Login</button>
+  <!-- Login Page -->
+  <div id="loginPage">
+    <div id="loginBox">
+      <h2>Driver Login</h2>
+      <input type="text" id="username" placeholder="Username"/>
+      <input type="password" id="password" placeholder="Password"/>
+      <button onclick="login()" class="action">Login</button>
     </div>
-    <label for="summaryDate">Select Date:</label>
-<input type="date" id="summaryDate">
-<button onclick="renderSummaryByDate()">View Summary</button>
+  </div>
 
-    <!-- Dashboard -->
-    <div id="dashboard" style="display:none;">
-        <h2>Admin Dashboard</h2>
+  <!-- Dashboard -->
+  <div id="dashboard" style="display:none;">
+    <header>
+      <h1>Smart Water Delivery</h1>
+      <nav>
+        <button onclick="showSection('orders')">Orders</button>
+        <button onclick="showSection('trips')">Trips</button>
+        <button onclick="logout()">Logout</button>
+      </nav>
+    </header>
 
-        <!-- Daily Summary -->
-        <div id="summaryDiv"></div>
+    <main>
+      <div class="card" id="summaryCard">
+        <h2>Daily Summary</h2>
+        <p>Total Cans Delivered: <span id="totalCans">0</span></p>
+        <p>Cash Collected: ₹<span id="cashCollected">0</span></p>
+        <p>UPI Collected: ₹<span id="upiCollected">0</span></p>
+        <p>Pending Orders: <span id="pendingOrders">0</span></p>
+      </div>
 
-        <!-- Admin Summary -->
-        <div id="adminSummaryDiv"></div>
-        <button onclick="renderAdminSummary()">View Admin Summary</button>
+      <!-- Orders Section -->
+      <div class="card" id="orders">
+        <h2>Place Order</h2>
+        <input type="text" id="customerName" placeholder="Customer Name"/>
+        <input type="number" id="cans" placeholder="No. of Cans"/>
+        <select id="paymentType">
+          <option value="Cash">Cash</option>
+          <option value="UPI">UPI</option>
+        </select>
+        <button onclick="placeOrder()" class="action">Place Order</button>
+        <button onclick="exportOrders()">Export Orders CSV</button>
 
-        <!-- Customer Summary -->
-        <div id="customerSummaryDiv"></div>
-        <button onclick="renderCustomerSummary()">View Customer Summary</button>
+        <h3>Orders History</h3>
+        <table>
+          <thead>
+            <tr><th>Customer</th><th>Cans</th><th>Amount</th><th>Payment</th><th>Date</th></tr>
+          </thead>
+          <tbody id="ordersTable"></tbody>
+        </table>
+      </div>
 
-        <!-- Orders & Trip History -->
-        <div>
-            <button onclick="renderOrders()">View Order History</button>
-            <button onclick="renderTrips()">View Trip History</button>
-        </div>
-    </div>
+      <!-- Trips Section -->
+      <div class="card" id="trips" style="display:none;">
+        <h2>Log Trip</h2>
+        <input type="number" id="tripNumber" placeholder="Trip Number"/>
+        <input type="number" id="empties" placeholder="Empties Collected"/>
+        <button onclick="logTrip()" class="action">Log Trip</button>
 
-    <!-- Tables -->
-    <h3>Order History</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>Customer</th>
-                <th>Cans</th>
-                <th>Amount</th>
-                <th>Payment Type</th>
-                <th>Date</th>
-            </tr>
-        </thead>
-        <tbody id="orderHistoryBody"></tbody>
-    </table>
+        <h3>Trip History</h3>
+        <table>
+          <thead>
+            <tr><th>Trip #</th><th>Total Cans</th><th>Empties</th><th>Amount</th><th>Time</th></tr>
+          </thead>
+          <tbody id="tripsTable"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
 
-    <h3>Trip History</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>Driver</th>
-                <th>Trip #</th>
-                <th>Full Cans</th>
-                <th>Empty Cans</th>
-                <th>Amount</th>
-                <th>Customer Deliveries</th>
-                <th>Date</th>
-            </tr>
-        </thead>
-        <tbody id="tripHistoryBody"></tbody>
-    </table>
+  <script>
+    // --- LOGIN ---
+    function login() {
+      const user = document.getElementById('username').value;
+      const pass = document.getElementById('password').value;
+      if(user === "driver" && pass === "1234") {
+        sessionStorage.setItem("loggedIn", "true");
+        document.getElementById('loginPage').style.display="none";
+        document.getElementById('dashboard').style.display="block";
+      } else {
+        alert("Invalid Login! Use driver / 1234");
+      }
+    }
 
-    <script src="script.js"></script>
+    function logout() {
+      sessionStorage.clear();
+      document.getElementById('dashboard').style.display="none";
+      document.getElementById('loginPage').style.display="flex";
+    }
+
+    // --- ORDERS ---
+    let orders = [];
+    function placeOrder() {
+      let customer = document.getElementById('customerName').value;
+      let cans = parseInt(document.getElementById('cans').value);
+      let payment = document.getElementById('paymentType').value;
+      if(!customer || !cans) { alert("Enter details"); return; }
+
+      let amount = cans * 30; // assume ₹30 per can
+      let date = new Date().toLocaleString();
+
+      let order = {customer, cans, amount, payment, date};
+      orders.push(order);
+      updateOrdersTable();
+      updateSummary();
+
+      document.getElementById('customerName').value="";
+      document.getElementById('cans').value="";
+    }
+
+    function updateOrdersTable() {
+      let table = document.getElementById('ordersTable');
+      table.innerHTML="";
+      orders.forEach(o=>{
+        table.innerHTML+=`<tr>
+          <td>${o.customer}</td>
+          <td>${o.cans}</td>
+          <td>₹${o.amount}</td>
+          <td>${o.payment}</td>
+          <td>${o.date}</td>
+        </tr>`;
+      });
+    }
+
+    function updateSummary() {
+      let totalCans=0, cash=0, upi=0;
+      orders.forEach(o=>{
+        totalCans+=o.cans;
+        if(o.payment==="Cash") cash+=o.amount; else upi+=o.amount;
+      });
+      document.getElementById('totalCans').innerText=totalCans;
+      document.getElementById('cashCollected').innerText=cash;
+      document.getElementById('upiCollected').innerText=upi;
+      document.getElementById('pendingOrders').innerText=orders.length;
+    }
+
+    function exportOrders() {
+      if(orders.length===0){alert("No orders to export"); return;}
+      let csv="Customer,Cans,Amount,Payment,Date\n";
+      orders.forEach(o=>{
+        csv+=`${o.customer},${o.cans},${o.amount},${o.payment},${o.date}\n`;
+      });
+      let blob=new Blob([csv],{type:"text/csv"});
+      let a=document.createElement("a");
+      a.href=URL.createObjectURL(blob);
+      a.download="orders.csv";
+      a.click();
+    }
+
+    // --- TRIPS ---
+    let trips=[];
+    function logTrip() {
+      let tripNo = document.getElementById('tripNumber').value;
+      let empties = parseInt(document.getElementById('empties').value)||0;
+      let totalCans=orders.reduce((s,o)=>s+o.cans,0);
+      let totalAmount=orders.reduce((s,o)=>s+o.amount,0);
+      let time=new Date().toLocaleString();
+      let trip={tripNo,totalCans,empties,totalAmount,time};
+      trips.push(trip);
+      updateTripsTable();
+      document.getElementById('tripNumber').value="";
+      document.getElementById('empties').value="";
+    }
+
+    function updateTripsTable(){
+      let table=document.getElementById('tripsTable');
+      table.innerHTML="";
+      trips.forEach(t=>{
+        table.innerHTML+=`<tr>
+          <td>${t.tripNo}</td>
+          <td>${t.totalCans}</td>
+          <td>${t.empties}</td>
+          <td>₹${t.totalAmount}</td>
+          <td>${t.time}</td>
+        </tr>`;
+      });
+    }
+
+    // --- Section Switch ---
+    function showSection(id){
+      document.getElementById('orders').style.display="none";
+      document.getElementById('trips').style.display="none";
+      document.getElementById(id).style.display="block";
+    }
+
+    // --- Check session on load ---
+    window.onload=function(){
+      if(sessionStorage.getItem("loggedIn")==="true"){
+        document.getElementById('loginPage').style.display="none";
+        document.getElementById('dashboard').style.display="block";
+      }
+    }
+  </script>
 </body>
 </html>
