@@ -297,28 +297,32 @@ function addCustomerDriver(){let d=driverSelect.value;let c=prompt("Customer Nam
 // SUMMARY CARDS
 function updateSummaryCards(){
   summaryCards.innerHTML="";
-  let totalCustomers=0,totalCans=0,totalPaid=0,totalReturned=0;
+  let totalCustomers=0, totalCans=0, totalPaid=0, totalReturned=0;
+
   if(adminView.classList.contains('hidden')===false){
     for(let d in deliveries){
-      totalCustomers+=deliveries[d].length;
-      totalCans+=deliveries[d].reduce((a,b)=>a+b.cans,0);
-      totalPaid+=deliveries[d].reduce((a,b)=>a+b.paid,0);
-      totalReturned+=deliveries[d].reduce((a,b)=>a+b.returned,0);
+      totalCustomers += deliveries[d].length;
+      totalCans += deliveries[d].reduce((a,b)=>a+b.cans,0);
+      totalPaid += deliveries[d].reduce((a,b)=>a+b.paid,0);
+      totalReturned += deliveries[d].reduce((a,b)=>a+b.returned,0);
     }
   } else {
-    let d=driverSelect.value;let data=deliveries[d];
-    totalCustomers=data.length;
-    totalCans=data.reduce((a,b)=>a+b.cans,0);
-    totalPaid=data.reduce((a,b)=>a+b.paid,0);
-    totalReturned=data.reduce((a,b)=>a+b.returned,0);
+    let d = driverSelect.value;
+    let data = deliveries[d];
+    totalCustomers = data.length;
+    totalCans = data.reduce((a,b)=>a+b.cans,0);
+    totalPaid = data.reduce((a,b)=>a+b.paid,0);
+    totalReturned = data.reduce((a,b)=>a+b.returned,0);
   }
-  summaryCards.innerHTML=`
+
+  summaryCards.innerHTML = `
     <div class="summaryCard cardCustomers">Total Customers<br>${totalCustomers}</div>
     <div class="summaryCard cardCans">Total Cans<br>${totalCans}</div>
     <div class="summaryCard cardPaid">Total Paid<br>${totalPaid}</div>
     <div class="summaryCard cardReturned">Total Returned<br>${totalReturned}</div>
   `;
 }
+
 </script>
 </body>
 </html>
