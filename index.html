@@ -40,6 +40,12 @@ th{background:#2575fc;color:white;}
 #searchInput{margin-bottom:10px;width:50%;}
 .logoutBtn{float:right;width:100px;margin-top:-40px;}
 textarea{width:90%;padding:5px;}
+#summaryCards{display:flex;justify-content:space-around;margin-bottom:20px;}
+.summaryCard{flex:1;margin:5px;padding:15px;border-radius:10px;color:white;font-weight:bold;text-align:center;}
+.cardCustomers{background:#6a11cb;}
+.cardCans{background:#2575fc;}
+.cardPaid{background:#ff7e5f;}
+.cardReturned{background:#feb47b;}
 </style>
 </head>
 <body>
@@ -70,6 +76,9 @@ textarea{width:90%;padding:5px;}
   <h2 id="dashboardTitle"></h2>
   <p id="dateDisplay"></p>
   <input type="text" id="searchInput" placeholder="Search Customer..." onkeyup="searchTable()">
+
+  <!-- SUMMARY CARDS -->
+  <div id="summaryCards"></div>
 
   <!-- ADMIN VIEW -->
   <div id="adminView" class="hidden">
@@ -140,29 +149,26 @@ textarea{width:90%;padding:5px;}
 </div>
 
 <script>
+// ELEMENTS
 const roleSelect=document.getElementById('roleSelect');
 const driverSelect=document.getElementById('driverSelect');
 const passwordInput=document.getElementById('password');
 const showPass=document.getElementById('showPass');
-
 const loginContainer=document.getElementById('loginContainer');
 const dashboardContainer=document.getElementById('dashboardContainer');
 const dashboardTitle=document.getElementById('dashboardTitle');
 const dateDisplay=document.getElementById('dateDisplay');
-
 const adminView=document.getElementById('adminView');
 const driverView=document.getElementById('driverView');
-
 const driverTableBody=document.querySelector('#driverTable tbody');
 const customerDetails=document.getElementById('customerDetails');
 const customerTableBody=document.querySelector('#customerTable tbody');
-
 const driverTripTableBody=document.querySelector('#driverTripTable tbody');
 const totalCans=document.getElementById('totalCans');
 const totalPaid=document.getElementById('totalPaid');
 const totalReturned=document.getElementById('totalReturned');
-
 const searchInput=document.getElementById('searchInput');
+const summaryCards=document.getElementById('summaryCards');
 
 // USERS
 const users={admin:"admin123",driver1:"driver123",driver2:"driver123",driver3:"driver123",driver4:"driver123"};
@@ -182,7 +188,7 @@ roleSelect.addEventListener('change',()=>{
   else{driverSelect.classList.add('hidden');passwordInput.style.display='none';}
 });
 
-// PASSWORD TOGGLE
+// SHOW PASSWORD TOGGLE
 showPass.addEventListener('change',()=>{passwordInput.type=showPass.checked?'text':'password';});
 
 // LOGIN
@@ -196,11 +202,11 @@ function login(){
     if(roleSelect.value==='admin'){
       dashboardTitle.innerText="Admin Dashboard";
       adminView.classList.remove('hidden');driverView.classList.add('hidden');
-      loadAdminTable();
+      loadAdminTable();updateSummaryCards();
     } else{
       dashboardTitle.innerText=driverSelect.value.charAt(0).toUpperCase()+driverSelect.value.slice(1)+" Dashboard";
       driverView.classList.remove('hidden');adminView.classList.add('hidden');
-      loadDriverTable(selectedUser);
+      loadDriverTable(selectedUser);updateSummaryCards();
     }
   } else{alert("Incorrect Password");}
 }
@@ -219,12 +225,13 @@ function loadAdminTable(){
   for(let driver in deliveries){
     let totalCustomers=deliveries[driver].length;
     let totalCansDelivered=deliveries[driver].reduce((a,b)=>a+b.cans,0);
-    let totalPaid=deliveries[driver].reduce((a,b)=>a+b.paid,0);
+    let totalPaidAmount=deliveries[driver].reduce((a,b)=>a+b.paid,0);
     let totalReturned=deliveries[driver].reduce((a,b)=>a+b.returned,0);
     let row=document.createElement('tr');
-    row.innerHTML=`<td>${driver}</td><td>${totalCustomers}</td><td>${totalCansDelivered}</td><td>${totalPaid}</td><td>${totalReturned}</td><td><button onclick="viewCustomerDetails('${driver}')">View Details</button></td>`;
+    row.innerHTML=`<td>${driver}</td><td>${totalCustomers}</td><td>${totalCansDelivered}</td><td>${totalPaidAmount}</td><td>${totalReturned}</td><td><button onclick="viewCustomerDetails('${driver}')">View Details</button></td>`;
     driverTableBody.appendChild(row);
   }
+  updateSummaryCards();
 }
 
 // VIEW CUSTOMER DETAILS
@@ -241,11 +248,12 @@ function viewCustomerDetails(driver){
       <td><textarea onchange="updateNotes('${driver}',${i},this.value)">${d.notes}</textarea></td>`;
     customerTableBody.appendChild(row);
   });
+  updateSummaryCards();
 }
 
 // DRIVER TABLE
 function loadDriverTable(driver){
-  driverTripTableBody.innerHTML="";let totalC=0,totalP=0,totalR=0;
+  driverTripTableBody.innerHTML="";let tC=0,tP=0,tR=0;
   deliveries[driver].forEach((d,i)=>{
     let row=document.createElement('tr');
     row.innerHTML=`<td>${d.customer}</td>
@@ -255,74 +263,61 @@ function loadDriverTable(driver){
       <td>${d.time}</td>
       <td><textarea onchange="updateNotes('${driver}',${i},this.value)">${d.notes}</textarea></td>`;
     driverTripTableBody.appendChild(row);
-    totalC+=d.cans;totalP+=d.paid;totalR+=d.returned;
+    tC+=d.cans;tP+=d.paid;tR+=d.returned;
   });
-  totalCans.innerText=totalC;totalPaid.innerText=totalP;totalReturned.innerText=totalR;
+  totalCans.innerText=tC;totalPaid.innerText=tP;totalReturned.innerText=tR;
+  updateSummaryCards();
 }
 
-// UPDATE CANS
-function updateCans(driver,i,value){
-  let cans = parseInt(value)||0;
-  deliveries[driver][i].cans = cans;
-  deliveries[driver][i].paid = cans*30; // 1 can = 30
-  if(driverView.classList.contains('hidden')===false){
-    loadDriverTable(driver);
-  } else {
-    viewCustomerDetails(driver);
-    loadAdminTable();
-  }
-}
-
-// UPDATE RETURNED & NOTES
-function updateReturned(driver,i,value){deliveries[driver][i].returned=parseInt(value)||0;if(driverView.classList.contains('hidden')===false){loadDriverTable(driver);} else{viewCustomerDetails(driver);loadAdminTable();}}
+// UPDATE CANS / RETURNED / NOTES
+function updateCans(driver,i,value){let c=parseInt(value)||0;deliveries[driver][i].cans=c;deliveries[driver][i].paid=c*30;if(driverView.classList.contains('hidden')===false){loadDriverTable(driver);}else{viewCustomerDetails(driver);loadAdminTable();}}
+function updateReturned(driver,i,value){deliveries[driver][i].returned=parseInt(value)||0;if(driverView.classList.contains('hidden')===false){loadDriverTable(driver);}else{viewCustomerDetails(driver);loadAdminTable();}}
 function updateNotes(driver,i,value){deliveries[driver][i].notes=value;}
 
 // SEARCH
 function searchTable(){
-  let filter=searchInput.value.toLowerCase();
+  let f=searchInput.value.toLowerCase();
   let table=driverView.classList.contains('hidden')?customerTableBody.parentElement:driverTripTableBody.parentElement;
   let trs=table.getElementsByTagName("tr");
   for(let i=1;i<trs.length;i++){
     let tds=trs[i].getElementsByTagName("td");let match=false;
-    for(let j=0;j<tds.length;j++){if(tds[j].innerText.toLowerCase().includes(filter)){match=true;break;}}
+    for(let j=0;j<tds.length;j++){if(tds[j].innerText.toLowerCase().includes(f)){match=true;break;}}
     trs[i].style.display=match?"":"none";
   }
 }
 
-// EXPORT CSV (driver)
-function exportCSV(){
-  let driver=driverSelect.value;if(!driver){driver=currentDriver;}
-  let data=deliveries[driver];
-  let csv='Customer,Cans Delivered,Amount Paid,Cans Returned,Time,Notes\n';
-  data.forEach(d=>{csv+=`${d.customer},${d.cans},${d.paid},${d.returned},${d.time},"${d.notes}"\n`;});
-  let blob=new Blob([csv],{type:'text/csv'});
-  let url=URL.createObjectURL(blob);let a=document.createElement('a');a.href=url;a.download=`${driver}_trip.csv`;a.click();URL.revokeObjectURL(url);
-}
+// EXPORT CSV
+function exportCSV(){let driver=driverSelect.value||currentDriver;let data=deliveries[driver];let csv='Customer,Cans Delivered,Amount Paid,Cans Returned,Time,Notes\n';data.forEach(d=>{csv+=`${d.customer},${d.cans},${d.paid},${d.returned},${d.time},"${d.notes}"\n`;});let blob=new Blob([csv],{type:'text/csv'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${driver}_trip.csv`;a.click();}
+function exportAllDriversCSV(){let csv='Driver,Customer,Cans Delivered,Amount Paid,Cans Returned,Time,Notes\n';for(let driver in deliveries){deliveries[driver].forEach(d=>{csv+=`${driver},${d.customer},${d.cans},${d.paid},${d.returned},${d.time},"${d.notes}"\n`;});}let blob=new Blob([csv],{type:'text/csv'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='All_Drivers_Delivery.csv';a.click();}
 
-// EXPORT ALL DRIVERS CSV
-function exportAllDriversCSV(){
-  let csv='Driver,Customer,Cans Delivered,Amount Paid,Cans Returned,Time,Notes\n';
-  for(let driver in deliveries){deliveries[driver].forEach(d=>{csv+=`${driver},${d.customer},${d.cans},${d.paid},${d.returned},${d.time},"${d.notes}"\n`;});}
-  let blob=new Blob([csv],{type:'text/csv'});let url=URL.createObjectURL(blob);let a=document.createElement('a');a.href=url;a.download='All_Drivers_Delivery.csv';a.click();URL.revokeObjectURL(url);
-}
+// ADD CUSTOMER
+function addCustomerAdmin(){let c=prompt("Customer Name:");let cans=parseInt(prompt("Cans Delivered:"))||0;let ret=parseInt(prompt("Cans Returned:"))||0;let time=prompt("Delivery Time:")||"";if(c){let paid=cans*30;deliveries[currentDriver].push({customer:c,cans,paid,returned:ret,time,notes:""});viewCustomerDetails(currentDriver);loadAdminTable();}}
+function addCustomerDriver(){let d=driverSelect.value;let c=prompt("Customer Name:");let cans=parseInt(prompt("Cans Delivered:"))||0;let ret=parseInt(prompt("Cans Returned:"))||0;let time=prompt("Delivery Time:")||"";if(c){let paid=cans*30;deliveries[d].push({customer:c,cans,paid,returned:ret,time,notes:""});loadDriverTable(d);}}
 
-// ADD CUSTOMER (Admin)
-function addCustomerAdmin(){
-  let customer=prompt("Customer Name:");
-  let cans=parseInt(prompt("Cans Delivered:"))||0;
-  let returned=parseInt(prompt("Cans Returned:"))||0;
-  let time=prompt("Delivery Time:")||"";
-  if(customer){let paid=cans*30;deliveries[currentDriver].push({customer,cans,paid,returned,time,notes:""});viewCustomerDetails(currentDriver);loadAdminTable();}
-}
-
-// ADD CUSTOMER (Driver)
-function addCustomerDriver(){
-  let driver=driverSelect.value;
-  let customer=prompt("Customer Name:");
-  let cans=parseInt(prompt("Cans Delivered:"))||0;
-  let returned=parseInt(prompt("Cans Returned:"))||0;
-  let time=prompt("Delivery Time:")||"";
-  if(customer){let paid=cans*30;deliveries[driver].push({customer,cans,paid,returned,time,notes:""});loadDriverTable(driver);}
+// SUMMARY CARDS
+function updateSummaryCards(){
+  summaryCards.innerHTML="";
+  let totalCustomers=0,totalCans=0,totalPaid=0,totalReturned=0;
+  if(adminView.classList.contains('hidden')===false){
+    for(let d in deliveries){
+      totalCustomers+=deliveries[d].length;
+      totalCans+=deliveries[d].reduce((a,b)=>a+b.cans,0);
+      totalPaid+=deliveries[d].reduce((a,b)=>a+b.paid,0);
+      totalReturned+=deliveries[d].reduce((a,b)=>a+b.returned,0);
+    }
+  } else {
+    let d=driverSelect.value;let data=deliveries[d];
+    totalCustomers=data.length;
+    totalCans=data.reduce((a,b)=>a+b.cans,0);
+    totalPaid=data.reduce((a,b)=>a+b.paid,0);
+    totalReturned=data.reduce((a,b)=>a+b.returned,0);
+  }
+  summaryCards.innerHTML=`
+    <div class="summaryCard cardCustomers">Total Customers<br>${totalCustomers}</div>
+    <div class="summaryCard cardCans">Total Cans<br>${totalCans}</div>
+    <div class="summaryCard cardPaid">Total Paid<br>${totalPaid}</div>
+    <div class="summaryCard cardReturned">Total Returned<br>${totalReturned}</div>
+  `;
 }
 </script>
 </body>
