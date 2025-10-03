@@ -5,53 +5,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Smart Water Delivery Dashboard</title>
 <style>
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  margin: 0;
-  background: linear-gradient(135deg, #6a11cb, #2575fc);
-  color: #333;
-}
-.container {
-  max-width: 1200px;
-  margin: 20px auto;
-  background: #fff;
-  border-radius: 15px;
-  padding: 20px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-}
-h1,h2,h3{text-align:center;color:#2575fc;}
-select,input,button,textarea{
-  padding:10px;margin:5px 0;border-radius:8px;border:1px solid #ccc;font-size:14px;
-}
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin:0; background:#f5f5f5; color:#333; }
+.container { max-width:1200px; margin:20px auto; background:#fff; border-radius:15px; padding:20px; box-shadow:0 10px 25px rgba(0,0,0,0.2); }
+h1,h2,h3{text-align:center;color:#333;}
+select,input,button,textarea{padding:10px;margin:5px 0;border-radius:8px;border:1px solid #ccc;font-size:14px;}
 select{width:100%;background:#f0f8ff;}
-input[type="password"]{width:100%;border:1px solid #2575fc;}
-button{
-  background: linear-gradient(45deg, #6a11cb, #2575fc);
-  color:white;border:none;cursor:pointer;font-weight:bold;margin-top:10px;transition:0.3s;
-}
-button:hover{background: linear-gradient(45deg, #2575fc, #6a11cb);}
+input[type="password"]{width:100%;border:1px solid #333;}
+button{background:#2575fc;color:white;border:none;cursor:pointer;font-weight:bold;margin-top:10px;transition:0.3s;}
+button:hover{background:#6a11cb;}
 table{width:100%;border-collapse:collapse;margin-top:10px;}
 th,td{border:1px solid #ccc;padding:10px;text-align:center;}
 th{background:#2575fc;color:white;}
-.paid{background-color:#d4edda;}
-.unpaid{background-color:#f8d7da;}
 .hidden{display:none;}
-.total{font-weight:bold;background-color:#f1f1f1;}
 #searchInput{margin-bottom:10px;width:50%;}
 .logoutBtn{float:right;width:100px;margin-top:-40px;}
-textarea{width:90%;padding:5px;}
 #summaryCards{display:flex;justify-content:space-around;margin-bottom:20px;}
 .summaryCard{flex:1;margin:5px;padding:15px;border-radius:10px;color:white;font-weight:bold;text-align:center;}
 .cardCustomers{background:#6a11cb;}
 .cardCans{background:#2575fc;}
 .cardPaid{background:#ff7e5f;}
 .cardReturned{background:#feb47b;}
+#map,#driverMap{height:400px;margin-top:20px;}
+.driverContainer{display:flex; gap:20px;}
+.driverContainer > div{flex:1;}
 </style>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 <body>
 
+<!-- LOGIN -->
 <div class="container" id="loginContainer">
-  <h1>Welcome to Smart Water Delivery</h1>
+  <h1>Smart Water Delivery</h1>
   <select id="roleSelect">
     <option value="">Select Role</option>
     <option value="admin">Admin</option>
@@ -65,255 +51,128 @@ textarea{width:90%;padding:5px;}
     <option value="driver4">Driver 4</option>
   </select>
   <input type="password" id="password" placeholder="Enter Password">
-  <label>
-    <input type="checkbox" id="showPass"> Show Password
-  </label>
+  <label><input type="checkbox" id="showPass"> Show Password</label>
   <button onclick="login()">Login</button>
 </div>
 
+<!-- DASHBOARD -->
 <div class="container hidden" id="dashboardContainer">
   <button class="logoutBtn" onclick="logout()">Logout</button>
   <h2 id="dashboardTitle"></h2>
   <p id="dateDisplay"></p>
   <input type="text" id="searchInput" placeholder="Search Customer..." onkeyup="searchTable()">
-
-  <!-- SUMMARY CARDS -->
   <div id="summaryCards"></div>
 
-  <!-- ADMIN VIEW -->
-  <div id="adminView" class="hidden">
-    <h3>All Drivers Summary</h3>
-    <button onclick="exportAllDriversCSV()">Export All Drivers CSV</button>
-    <table id="driverTable">
-      <thead>
-        <tr>
-          <th>Driver</th>
-          <th>Total Customers</th>
-          <th>Total Cans</th>
-          <th>Total Paid</th>
-          <th>Total Returned</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-
-    <div id="customerDetails" class="hidden">
-      <h3>Customer Details</h3>
-      <button onclick="addCustomerAdmin()">Add Customer</button>
-      <table id="customerTable">
-        <thead>
-          <tr>
-            <th>Customer</th>
-            <th>Cans Delivered</th>
-            <th>Amount Paid</th>
-            <th>Cans Returned</th>
-            <th>Delivery Time</th>
-            <th>Notes</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- DRIVER VIEW -->
+  <!-- DRIVER VIEW (SIDE-BY-SIDE) -->
   <div id="driverView" class="hidden">
     <h3>My Trip Details</h3>
-    <button onclick="addCustomerDriver()">Add Customer</button>
-    <table id="driverTripTable">
-      <thead>
-        <tr>
-          <th>Customer</th>
-          <th>Cans Delivered</th>
-          <th>Amount Paid</th>
-          <th>Cans Returned</th>
-          <th>Delivery Time</th>
-          <th>Notes</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-      <tfoot>
-        <tr class="total">
-          <td>Total</td>
-          <td id="totalCans">0</td>
-          <td id="totalPaid">0</td>
-          <td id="totalReturned">0</td>
-          <td>-</td>
-          <td>-</td>
-        </tr>
-      </tfoot>
-    </table>
-    <button onclick="exportCSV()">Export CSV</button>
+    <div class="driverContainer">
+      <!-- Left: Customer Table -->
+      <div>
+        <table id="driverTripTable">
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Cans Delivered</th>
+              <th>Amount Paid</th>
+              <th>Cans Returned</th>
+              <th>Delivery Time</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <button onclick="exportCSV()">Export CSV</button>
+        <button onclick="addCustomerOnMap(driverSelect.value)">Add Customer</button>
+      </div>
+
+      <!-- Right: Map -->
+      <div>
+        <h3>My Route Map</h3>
+        <div id="driverMap" style="height:500px;"></div>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
 // ELEMENTS
-const roleSelect=document.getElementById('roleSelect');
-const driverSelect=document.getElementById('driverSelect');
-const passwordInput=document.getElementById('password');
-const showPass=document.getElementById('showPass');
-const loginContainer=document.getElementById('loginContainer');
-const dashboardContainer=document.getElementById('dashboardContainer');
-const dashboardTitle=document.getElementById('dashboardTitle');
-const dateDisplay=document.getElementById('dateDisplay');
-const adminView=document.getElementById('adminView');
-const driverView=document.getElementById('driverView');
-const driverTableBody=document.querySelector('#driverTable tbody');
-const customerDetails=document.getElementById('customerDetails');
-const customerTableBody=document.querySelector('#customerTable tbody');
-const driverTripTableBody=document.querySelector('#driverTripTable tbody');
-const totalCans=document.getElementById('totalCans');
-const totalPaid=document.getElementById('totalPaid');
-const totalReturned=document.getElementById('totalReturned');
-const searchInput=document.getElementById('searchInput');
-const summaryCards=document.getElementById('summaryCards');
+const roleSelect = document.getElementById('roleSelect');
+const driverSelect = document.getElementById('driverSelect');
+const passwordInput = document.getElementById('password');
+const showPass = document.getElementById('showPass');
+const loginContainer = document.getElementById('loginContainer');
+const dashboardContainer = document.getElementById('dashboardContainer');
+const dashboardTitle = document.getElementById('dashboardTitle');
+const dateDisplay = document.getElementById('dateDisplay');
+const driverView = document.getElementById('driverView');
+const driverTripTableBody = document.querySelector('#driverTripTable tbody');
+const summaryCards = document.getElementById('summaryCards');
 
-// USERS
-const users={admin:"admin123",driver1:"driver123",driver2:"driver123",driver3:"driver123",driver4:"driver123"};
-
-// DELIVERIES
-const deliveries={
-  driver1:[{customer:"Customer A",cans:5,paid:150,returned:1,time:"9:00 AM",notes:""},{customer:"Customer B",cans:3,paid:90,returned:0,time:"10:00 AM",notes:""}],
-  driver2:[{customer:"Customer C",cans:4,paid:120,returned:0,time:"9:30 AM",notes:""},{customer:"Customer D",cans:2,paid:60,returned:1,time:"10:30 AM",notes:""}],
-  driver3:[{customer:"Customer E",cans:6,paid:180,returned:0,time:"11:00 AM",notes:""},{customer:"Customer F",cans:3,paid:90,returned:0,time:"11:30 AM",notes:""}],
-  driver4:[{customer:"Customer G",cans:4,paid:120,returned:0,time:"12:00 PM",notes:""},{customer:"Customer H",cans:2,paid:60,returned:1,time:"12:30 PM",notes:""}]
+// USERS & DELIVERIES
+const users = {driver1:"driver123", driver2:"driver123", driver3:"driver123", driver4:"driver123"};
+const deliveries = {
+  driver1:[{customer:"Customer A",cans:5,paid:150,returned:1,time:"9:00 AM",notes:""}],
+  driver2:[{customer:"Customer B",cans:3,paid:90,returned:0,time:"10:00 AM",notes:""}],
+  driver3:[], driver4:[]
+};
+const driversLocations = {
+  driver1:[{name:"Customer A",lat:15.1400,lng:76.9220,cans:5,paid:150,returned:1}],
+  driver2:[{name:"Customer B",lat:15.1380,lng:76.9240,cans:3,paid:90,returned:0}],
+  driver3:[], driver4:[]
 };
 
-// SHOW/HIDE DRIVER SELECT
-roleSelect.addEventListener('change',()=>{
-  if(roleSelect.value==='driver'){driverSelect.classList.remove('hidden');passwordInput.style.display='block';}
-  else if(roleSelect.value==='admin'){driverSelect.classList.add('hidden');passwordInput.style.display='block';}
-  else{driverSelect.classList.add('hidden');passwordInput.style.display='none';}
+// MAP VARIABLES
+let driverMap, driverMarker, driverRouteLine;
+let addingCustomer=false;
+
+// LOGIN/LOGOUT
+roleSelect.addEventListener('change', ()=>{
+  if(roleSelect.value==='driver'){driverSelect.classList.remove('hidden'); passwordInput.style.display='block';}
+  else {driverSelect.classList.add('hidden'); passwordInput.style.display='block';}
 });
+showPass.addEventListener('change', ()=>{passwordInput.type = showPass.checked ? 'text':'password';});
 
-// SHOW PASSWORD TOGGLE
-showPass.addEventListener('change',()=>{passwordInput.type=showPass.checked?'text':'password';});
-
-// LOGIN
 function login(){
-  let selectedUser=roleSelect.value==='admin'?'admin':driverSelect.value;
-  if(!selectedUser){alert("Please select a role/driver");return;}
-  if(users[selectedUser]===passwordInput.value){
+  let selectedUser = driverSelect.value;
+  if(!selectedUser){alert("Select driver"); return;}
+  if(users[selectedUser] === passwordInput.value){
     loginContainer.classList.add('hidden');
     dashboardContainer.classList.remove('hidden');
-    dateDisplay.innerHTML="Today's Date: "+new Date().toDateString();
-    if(roleSelect.value==='admin'){
-      dashboardTitle.innerText="Admin Dashboard";
-      adminView.classList.remove('hidden');driverView.classList.add('hidden');
-      loadAdminTable();updateSummaryCards();
-    } else{
-      dashboardTitle.innerText=driverSelect.value.charAt(0).toUpperCase()+driverSelect.value.slice(1)+" Dashboard";
-      driverView.classList.remove('hidden');adminView.classList.add('hidden');
-      loadDriverTable(selectedUser);updateSummaryCards();
-    }
+    dateDisplay.innerHTML = "Today's Date: " + new Date().toDateString();
+    dashboardTitle.innerText = selectedUser + " Dashboard";
+    driverView.classList.remove('hidden');
+    loadDriverTable(selectedUser);
+    updateSummaryCards(selectedUser);
+    loadDriverMap(selectedUser);
   } else{alert("Incorrect Password");}
 }
 
-// LOGOUT
 function logout(){
-  dashboardContainer.classList.add('hidden');
   loginContainer.classList.remove('hidden');
-  passwordInput.value='';roleSelect.value='';driverSelect.value='';driverSelect.classList.add('hidden');
-  searchInput.value='';adminView.classList.add('hidden');driverView.classList.add('hidden');customerDetails.classList.add('hidden');
+  dashboardContainer.classList.add('hidden');
+  driverView.classList.add('hidden');
 }
 
-// ADMIN TABLE
-function loadAdminTable(){
-  driverTableBody.innerHTML="";
-  for(let driver in deliveries){
-    let totalCustomers=deliveries[driver].length;
-    let totalCansDelivered=deliveries[driver].reduce((a,b)=>a+b.cans,0);
-    let totalPaidAmount=deliveries[driver].reduce((a,b)=>a+b.paid,0);
-    let totalReturned=deliveries[driver].reduce((a,b)=>a+b.returned,0);
-    let row=document.createElement('tr');
-    row.innerHTML=`<td>${driver}</td><td>${totalCustomers}</td><td>${totalCansDelivered}</td><td>${totalPaidAmount}</td><td>${totalReturned}</td><td><button onclick="viewCustomerDetails('${driver}')">View Details</button></td>`;
-    driverTableBody.appendChild(row);
-  }
-  updateSummaryCards();
-}
-
-// VIEW CUSTOMER DETAILS
-let currentDriver='';
-function viewCustomerDetails(driver){
-  currentDriver=driver;customerDetails.classList.remove('hidden');customerTableBody.innerHTML="";
-  deliveries[driver].forEach((d,i)=>{
-    let row=document.createElement('tr');
-    row.innerHTML=`<td>${d.customer}</td>
-      <td><input type="number" value="${d.cans}" onchange="updateCans('${driver}',${i},this.value)"></td>
-      <td>${d.paid}</td>
-      <td><input type="number" value="${d.returned}" onchange="updateReturned('${driver}',${i},this.value)"></td>
-      <td>${d.time}</td>
-      <td><textarea onchange="updateNotes('${driver}',${i},this.value)">${d.notes}</textarea></td>`;
-    customerTableBody.appendChild(row);
-  });
-  updateSummaryCards();
-}
-
-// DRIVER TABLE
+// TABLE FUNCTIONS
 function loadDriverTable(driver){
-  driverTripTableBody.innerHTML="";let tC=0,tP=0,tR=0;
-  deliveries[driver].forEach((d,i)=>{
-    let row=document.createElement('tr');
-    row.innerHTML=`<td>${d.customer}</td>
-      <td><input type="number" value="${d.cans}" onchange="updateCans('${driver}',${i},this.value)"></td>
-      <td>${d.paid}</td>
-      <td><input type="number" value="${d.returned}" onchange="updateReturned('${driver}',${i},this.value)"></td>
-      <td>${d.time}</td>
-      <td><textarea onchange="updateNotes('${driver}',${i},this.value)">${d.notes}</textarea></td>`;
-    driverTripTableBody.appendChild(row);
-    tC+=d.cans;tP+=d.paid;tR+=d.returned;
+  driverTripTableBody.innerHTML="";
+  deliveries[driver].forEach(d=>{
+    driverTripTableBody.innerHTML += `<tr>
+      <td>${d.customer}</td><td>${d.cans}</td><td>${d.paid}</td><td>${d.returned}</td>
+      <td>${d.time}</td><td>${d.notes}</td>
+    </tr>`;
   });
-  totalCans.innerText=tC;totalPaid.innerText=tP;totalReturned.innerText=tR;
-  updateSummaryCards();
 }
-
-// UPDATE CANS / RETURNED / NOTES
-function updateCans(driver,i,value){let c=parseInt(value)||0;deliveries[driver][i].cans=c;deliveries[driver][i].paid=c*30;if(driverView.classList.contains('hidden')===false){loadDriverTable(driver);}else{viewCustomerDetails(driver);loadAdminTable();}}
-function updateReturned(driver,i,value){deliveries[driver][i].returned=parseInt(value)||0;if(driverView.classList.contains('hidden')===false){loadDriverTable(driver);}else{viewCustomerDetails(driver);loadAdminTable();}}
-function updateNotes(driver,i,value){deliveries[driver][i].notes=value;}
-
-// SEARCH
-function searchTable(){
-  let f=searchInput.value.toLowerCase();
-  let table=driverView.classList.contains('hidden')?customerTableBody.parentElement:driverTripTableBody.parentElement;
-  let trs=table.getElementsByTagName("tr");
-  for(let i=1;i<trs.length;i++){
-    let tds=trs[i].getElementsByTagName("td");let match=false;
-    for(let j=0;j<tds.length;j++){if(tds[j].innerText.toLowerCase().includes(f)){match=true;break;}}
-    trs[i].style.display=match?"":"none";
-  }
-}
-
-// EXPORT CSV
-function exportCSV(){let driver=driverSelect.value||currentDriver;let data=deliveries[driver];let csv='Customer,Cans Delivered,Amount Paid,Cans Returned,Time,Notes\n';data.forEach(d=>{csv+=`${d.customer},${d.cans},${d.paid},${d.returned},${d.time},"${d.notes}"\n`;});let blob=new Blob([csv],{type:'text/csv'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${driver}_trip.csv`;a.click();}
-function exportAllDriversCSV(){let csv='Driver,Customer,Cans Delivered,Amount Paid,Cans Returned,Time,Notes\n';for(let driver in deliveries){deliveries[driver].forEach(d=>{csv+=`${driver},${d.customer},${d.cans},${d.paid},${d.returned},${d.time},"${d.notes}"\n`;});}let blob=new Blob([csv],{type:'text/csv'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='All_Drivers_Delivery.csv';a.click();}
-
-// ADD CUSTOMER
-function addCustomerAdmin(){let c=prompt("Customer Name:");let cans=parseInt(prompt("Cans Delivered:"))||0;let ret=parseInt(prompt("Cans Returned:"))||0;let time=prompt("Delivery Time:")||"";if(c){let paid=cans*30;deliveries[currentDriver].push({customer:c,cans,paid,returned:ret,time,notes:""});viewCustomerDetails(currentDriver);loadAdminTable();}}
-function addCustomerDriver(){let d=driverSelect.value;let c=prompt("Customer Name:");let cans=parseInt(prompt("Cans Delivered:"))||0;let ret=parseInt(prompt("Cans Returned:"))||0;let time=prompt("Delivery Time:")||"";if(c){let paid=cans*30;deliveries[d].push({customer:c,cans,paid,returned:ret,time,notes:""});loadDriverTable(d);}}
 
 // SUMMARY CARDS
-function updateSummaryCards(){
+function updateSummaryCards(driver){
   summaryCards.innerHTML="";
-  let totalCustomers=0, totalCans=0, totalPaid=0, totalReturned=0;
-
-  if(adminView.classList.contains('hidden')===false){
-    for(let d in deliveries){
-      totalCustomers += deliveries[d].length;
-      totalCans += deliveries[d].reduce((a,b)=>a+b.cans,0);
-      totalPaid += deliveries[d].reduce((a,b)=>a+b.paid,0);
-      totalReturned += deliveries[d].reduce((a,b)=>a+b.returned,0);
-    }
-  } else {
-    let d = driverSelect.value;
-    let data = deliveries[d];
-    totalCustomers = data.length;
-    totalCans = data.reduce((a,b)=>a+b.cans,0);
-    totalPaid = data.reduce((a,b)=>a+b.paid,0);
-    totalReturned = data.reduce((a,b)=>a+b.returned,0);
-  }
+  let data=deliveries[driver];
+  let totalCustomers=data.length;
+  let totalCans=data.reduce((a,b)=>a+b.cans,0);
+  let totalPaid=data.reduce((a,b)=>a+b.paid,0);
+  let totalReturned=data.reduce((a,b)=>a+b.returned,0);
 
   summaryCards.innerHTML = `
     <div class="summaryCard cardCustomers">Total Customers<br>${totalCustomers}</div>
@@ -323,6 +182,89 @@ function updateSummaryCards(){
   `;
 }
 
+// EXPORT CSV
+function exportCSV(){
+  let driver=driverSelect.value;
+  let data=deliveries[driver];
+  let csv='Customer,Cans Delivered,Amount Paid,Cans Returned,Time,Notes\n';
+  data.forEach(d=>{csv+=`${d.customer},${d.cans},${d.paid},${d.returned},${d.time},"${d.notes}"\n`;});
+  let blob=new Blob([csv],{type:'text/csv'});
+  let a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`${driver}_trip.csv`;
+  a.click();
+}
+
+// SEARCH
+function searchTable(){
+  let f=document.getElementById('searchInput').value.toLowerCase();
+  let trs=driverTripTableBody.getElementsByTagName("tr");
+  for(let i=0;i<trs.length;i++){
+    let tds=trs[i].getElementsByTagName("td");let match=false;
+    for(let j=0;j<tds.length;j++){if(tds[j].innerText.toLowerCase().includes(f)){match=true;break;}}
+    trs[i].style.display=match?"":"none";
+  }
+}
+
+// MAP
+function loadDriverMap(driver){
+  driverMap = L.map('driverMap').setView([15.1394,76.9214],14);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(driverMap);
+
+  // Add customer markers
+  driversLocations[driver].forEach(c=>{
+    L.marker([c.lat,c.lng]).addTo(driverMap)
+    .bindPopup(`<b>${c.name}</b><br>Cans: ${c.cans}<br>Paid: ₹${c.paid}`);
+  });
+
+  // Add driver route
+  updateDriverRoute(driver);
+
+  // Enable adding customer
+  driverMap.on('click', e=>{
+    if(!addingCustomer) return;
+    const lat=e.latlng.lat, lng=e.latlng.lng;
+    const name=prompt("Customer Name:"), cans=parseInt(prompt("Cans:"),10)||1;
+    const paid=parseInt(prompt("Paid Amount:"),10)||0, returned=parseInt(prompt("Returned Cans:"),10)||0;
+    if(!name) return;
+    driversLocations[driver].push({name,lat,lng,cans,paid,returned});
+    deliveries[driver].push({customer:name,cans,paid,returned,time:new Date().toLocaleTimeString(),notes:""});
+    loadDriverTable(driver);
+    updateSummaryCards(driver);
+    updateDriverRoute(driver);
+    addingCustomer=false;
+  });
+
+  // Get driver live position
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(pos=>{
+      const driverLat = pos.coords.latitude, driverLng = pos.coords.longitude;
+      driverMarker = L.marker([driverLat, driverLng],{icon:L.icon({iconUrl:'https://cdn-icons-png.flaticon.com/512/252/252025.png',iconSize:[30,30]})}).addTo(driverMap).bindPopup("You are here").openPopup();
+      driverMap.setView([driverLat, driverLng],14);
+      updateDriverRoute(driver);
+    });
+  }
+}
+
+function updateDriverRoute(driver){
+  // Remove existing route line
+  if(driverRouteLine) driverMap.removeLayer(driverRouteLine);
+
+  // Get driver location
+  let start=[15.1394,76.9214]; // default
+  if(driverMarker) start=[driverMarker.getLatLng().lat, driverMarker.getLatLng().lng];
+
+  const routeCoords=[start, ...driversLocations[driver].map(c=>[c.lat,c.lng])];
+  driverRouteLine = L.polyline(routeCoords,{color:'blue'}).addTo(driverMap);
+  driverMap.fitBounds(driverRouteLine.getBounds());
+}
+
+// ADD CUSTOMER
+function addCustomerOnMap(driver){
+  if(!driver){alert("Select driver!"); return;}
+  addingCustomer=true;
+  alert("Click on the map to place the new customer.");
+}
 </script>
 </body>
 </html>
